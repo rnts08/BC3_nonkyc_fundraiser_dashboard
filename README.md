@@ -2,7 +2,7 @@
 
 This repository contains a static dashboard for the BC3 Network NonKYC.io listing fundraiser.
 
-Live site: https://bc3-nonkyc.tbtechvn.com/
+Live site: https://bc3-nonkyc.tbtechvn.com/ - site is online for anyone to view.
 
 ## Screenshot
 
