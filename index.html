@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BC3 Network — NonKYC.io listing Fundraiser</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0a;
+    color: #d4d4d4;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  a { color: #f7931a; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #1a1a1a;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .logo-area img { height: 36px; width: auto; }
+  .logo-area h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    letter-spacing: -0.02em;
+  }
+  .logo-area h1 span { color: #f7931a; }
+  header nav { display: flex; gap: 1.5rem; font-size: 0.875rem; }
+  header nav a { color: #888; }
+  header nav a:hover { color: #f0f0f0; text-decoration: none; }
+
+  .hero {
+    text-align: center;
+    padding: 4rem 2rem 3rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .hero h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #f0f0f0;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .hero h2 i { font-style: italic; color: #f7931a; }
+  .hero p { color: #888; font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    background: #1a1a1a;
+    border: 1px solid #1a1a1a;
+    max-width: 960px;
+    margin: 0 auto 3rem;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .stat-card {
+    background: #0f0f0f;
+    padding: 1.5rem 1rem;
+    text-align: center;
+  }
+  .stat-number {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #f0f0f0;
+    margin-bottom: 0.25rem;
+  }
+  .stat-number.btc { color: #f7931a; }
+  .stat-number.bc3 { color: #a29bfe; }
+  .stat-number.usd { color: #2ecc71; }
+  .stat-number.small { font-size: 1.1rem; }
+  .stat-label {
+    font-size: 0.75rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .progress-section {
+    max-width: 960px;
+    margin: 0 auto 2rem;
+    padding: 0 2rem;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: #888;
+    margin-bottom: 0.5rem;
+  }
+  .progress-bar-bg {
+    background: #1a1a1a;
+    border-radius: 4px;
+    height: 16px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #f7931a, #2ecc71);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+  .progress-goal {
+    text-align: right;
+    font-size: 0.75rem;
+    color: #555;
+    margin-top: 0.35rem;
+  }
+
+  .breakdown {
+    max-width: 960px;
+    margin: 0 auto 2rem;
+    padding: 0 2rem;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: #666;
+  }
+  .breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .breakdown-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .filters {
+    max-width: 960px;
+    margin: 0 auto 1.5rem;
+    padding: 0 2rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: none;
+    border: 1px solid #2a2a2a;
+    color: #888;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .filter-btn:hover { border-color: #444; color: #d4d4d4; }
+  .filter-btn.active {
+    background: #f7931a;
+    border-color: #f7931a;
+    color: #0a0a0a;
+    font-weight: 600;
+  }
+
+  .table-wrap {
+    max-width: 960px;
+    margin: 0 auto 3rem;
+    padding: 0 2rem;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  thead th {
+    text-align: left;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.7rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #1a1a1a;
+    font-weight: 600;
+  }
+  tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #141414;
+    vertical-align: middle;
+  }
+  tbody tr:hover td { background: #111; }
+
+  .chain-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .chain-badge.bc3 { background: #6c5ce722; color: #a29bfe; }
+  .chain-badge.btc { background: #f7931a22; color: #f7931a; }
+  .chain-badge.sol { background: #9945ff22; color: #9945ff; }
+  .chain-badge.erc20 { background: #627eea22; color: #627eea; }
+  .chain-badge.eth { background: #627eea22; color: #627eea; }
+
+  .txid-cell {
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+    font-size: 0.75rem;
+    color: #888;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+  }
+  .txid-cell a { color: #888; }
+  .txid-cell a:hover { color: #f7931a; text-decoration: none; }
+  .label-cell { font-weight: 600; color: #f0f0f0; }
+  .amount-cell { font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace; color: #d4d4d4; }
+  .amount-cell .usd-hint { color: #2ecc71; font-size: 0.7rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .date-cell { color: #666; font-size: 0.8rem; }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    border-top: 1px solid #1a1a1a;
+    color: #555;
+    font-size: 0.8rem;
+  }
+  footer a { color: #888; }
+
+  .status-msg {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #666;
+  }
+  .status-msg.error { color: #e74c3c; }
+  .price-note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #555;
+    max-width: 960px;
+    margin: -2rem auto 2rem;
+    padding: 0 2rem;
+  }
+  .api-status {
+    max-width: 960px;
+    margin: -2rem auto 2rem;
+    padding: 0 2rem;
+    font-size: 0.7rem;
+    color: #444;
+    text-align: center;
+  }
+  .api-status .ok { color: #2ecc71; }
+  .api-status .err { color: #e74c3c; }
+  .api-status .warn { color: #f7931a; }
+
+  .balance-display {
+    max-width: 960px;
+    margin: 0 auto 2rem;
+    padding: 0 2rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #666;
+  }
+  .balance-display .token {
+    display: inline-block;
+    margin: 0 0.75rem;
+  }
+  .balance-display .token .val { color: #d4d4d4; font-weight: 600; }
+
+  @media (max-width: 600px) {
+    header { padding: 1rem; }
+    .hero { padding: 2.5rem 1rem 2rem; }
+    .hero h2 { font-size: 1.75rem; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .progress-section, .filters, .table-wrap, .breakdown, .balance-display { padding-left: 1rem; padding-right: 1rem; }
+    thead th, tbody td { padding: 0.5rem 0.6rem; }
+    .txid-cell { max-width: 120px; }
+  }
+  .donate-section {
+    max-width: 960px;
+    margin: 0 auto 2rem;
+    padding: 0 2rem;
+  }
+  .donate-heading {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f0f0f0;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .donate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    background: #1a1a1a;
+    border: 1px solid #1a1a1a;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .donate-card {
+    background: #0f0f0f;
+    padding: 1.25rem 1rem;
+    text-align: center;
+  }
+  .donate-chain {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  .donate-chain.btc { color: #f7931a; }
+  .donate-chain.eth { color: #627eea; }
+  .donate-chain.sol { color: #9945ff; }
+  .donate-token {
+    font-weight: 400;
+    opacity: 0.6;
+    font-size: 0.7rem;
+  }
+  .donate-addr {
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+    font-size: 0.7rem;
+    color: #888;
+    word-break: break-all;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: color 0.2s;
+    user-select: all;
+  }
+  .donate-addr:hover { color: #f7931a; }
+  .donate-addr .hint {
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.6rem;
+    color: #555;
+    margin-top: 0.25rem;
+    pointer-events: none;
+  }
+  .copy-btn {
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    color: #888;
+    padding: 0;
+    font: inherit;
+    text-align: left;
+    position: relative;
+    transition: color 0.2s;
+    user-select: none;
+  }
+  .copy-btn .faint {
+    color: inherit;
+    opacity: 0.6;
+  }
+  .copy-btn:hover {
+    color: #f7931a;
+    text-decoration: none;
+  }
+  .copy-btn:hover .faint {
+    opacity: 0.8;
+  }
+  .copy-btn .copy-tooltip {
+    position: absolute;
+    left: 50%;
+    top: -1.4rem;
+    transform: translateX(-50%);
+    background: #111;
+    border: 1px solid #2a2a2a;
+    color: #d4d4d4;
+    padding: 0.15rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.55rem;
+    letter-spacing: 0.02em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    white-space: nowrap;
+  }
+  .copy-btn.copied .copy-tooltip { opacity: 1; }
+  .faint { color: #666; }
+  .footer-support {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .footer-support .label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #666;
+  }
+  .footer-support .copy-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1.5rem;
+    font-size: 0.75rem;
+  }
+  .footer-support .copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-bottom: 1px dashed #2a2a2a;
+    padding-bottom: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <img src="https://bc3.network/logo.png" alt="BC3">
+    <h1>BC3 <span>Network</span></h1>
+  </div>
+  <nav>
+    <a href="https://bc3.network">Mainnet</a>
+    <a href="https://bc3mempool.codefalcon.dev">Explorer</a>
+    <a href="https://github.com/PinkStarrySky/BitcoinIII-Core">GitHub</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h2>NonKYC.io listing <i>Fundraiser</i></h2>
+  <p>Support the BC3 network fund the <strong>nonkyc.io listing</strong>, development, and community growth.</p>
+</section>
+
+<section class="stats" id="stats"></section>
+
+<section class="breakdown" id="breakdown" style="display:none"></section>
+
+<section class="progress-section" id="progressSection" style="display:none">
+  <div class="progress-header">
+    <span id="progressLabel">$0 / $3,499</span>
+    <span id="progressPercent">0%</span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressFill"></div>
+  </div>
+  <div class="progress-goal" id="progressGoal"></div>
+</section>
+
+<section class="balance-display" id="balanceDisplay" style="display:none"></section>
+
+<p class="price-note" id="priceNote"></p>
+<p class="api-status" id="apiStatus"></p>
+
+<section class="donate-section">
+  <h3 class="donate-heading">How to Donate</h3>
+  <div class="donate-grid">
+    <div class="donate-card">
+      <div class="donate-chain btc">Bitcoin <span class="donate-token">BTC · BCH · BC3</span></div>
+      <div class="donate-addr" id="addrBtc"></div>
+    </div>
+    <div class="donate-card">
+      <div class="donate-chain eth">Ethereum <span class="donate-token">ETH · USDT · USDC</span></div>
+      <div class="donate-addr" id="addrEvm"></div>
+    </div>
+    <div class="donate-card">
+      <div class="donate-chain sol">Solana <span class="donate-token">SOL · USDT · USDC</span></div>
+      <div class="donate-addr" id="addrSol"></div>
+    </div>
+  </div>
+</section>
+
+<section class="filters" id="filters">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="bc3">BC3</button>
+  <button class="filter-btn" data-filter="btc">Bitcoin</button>
+  <button class="filter-btn" data-filter="sol">Solana</button>
+  <button class="filter-btn" data-filter="erc20">ERC-20</button>
+</section>
+
+<section class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Label</th>
+        <th>Chain</th>
+        <th>Amount</th>
+        <th>Transaction</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody id="txBody"></tbody>
+  </table>
+</section>
+
+<footer>
+    <div class="footer-support">
+      <span class="label">Support Development and Operations:</span>
+      <div class="copy-group">
+        <button class="copy-btn" type="button" data-copy="bc1quvzj0cfk3cl7af0wp7ag0sjdx53zkfc7v5y4um" title="Click to copy" aria-label="Copy BC3 donation address">
+          <span class="faint">BC3:</span> bc1quvzj0...v5y4um <i class="fas fa-copy" style="font-size:0.55rem;opacity:0.6"></i><span class="copy-tooltip">Copied!</span>
+        </button>
+        <button class="copy-btn" type="button" data-copy="0x6e8e3c2b31424266e7cff59e910df1587c317427" title="Click to copy" aria-label="Copy ETC/ERC-20 donation address">
+          <span class="faint">ETC/ERC-20:</span> 0x6e8e3c2b...7c317427 <i class="fas fa-copy" style="font-size:0.55rem;opacity:0.6"></i><span class="copy-tooltip">Copied!</span>
+        </button>
+        <button class="copy-btn" type="button" data-copy="bc1qzzvcguvqjc6qhwe2y5vy38w2zke7hksukjhm68" title="Click to copy" aria-label="Copy BTC donation address">
+          <span class="faint">BTC:</span> bc1qzzvcg...kjhm68 <i class="fas fa-copy" style="font-size:0.55rem;opacity:0.6"></i><span class="copy-tooltip">Copied!</span>
+        </button>
+        <button class="copy-btn" type="button" data-copy="GGEaCMpnyM8tB5BU4RMuLm6tgMr3q9FgMHodxDxxAGby" title="Click to copy" aria-label="Copy SOL donation address">
+          <span class="faint">SOL:</span> GGEaCMpnyM...xxAGby <i class="fas fa-copy" style="font-size:0.55rem;opacity:0.6"></i><span class="copy-tooltip">Copied!</span>
+        </button>
+        <button class="copy-btn" type="button" data-copy="MPfm5QLKH1r9XxgWmH75Gyps4LDfX5c53L" title="Click to copy" aria-label="Copy LTC donation address">
+          <span class="faint">LTC:</span> MPfm5QLK...X5c53L <i class="fas fa-copy" style="font-size:0.55rem;opacity:0.6"></i><span class="copy-tooltip">Copied!</span>
+        </button>
+      </div>
+    </div>
+
+  Fundraiser for <a href="https://nonkyc.io">nonkyc.io</a> listing · BC3 Network
+</footer>
+
+<script>
+'use strict';
+
+/* ── Configuration ────────────────────────────────── */
+const CONFIG = {
+  goal_usd: 3499,
+  start_date: '2026-05-28',
+  addresses: {
+    btc: '1BitcoinYxxzrMt2waqqRSNXdRbixiof9Z',  
+    evm: '0x7180023dfb9AE329E3F5ee28658A4D4A7Bc50E24',
+    sol: 'JDvCXtAKZxcQyhdrcnF4PsLtUSosWn7gDJsU6YVSLvW6'
+  }
+};
+const BLOCKSTREAM_URL = 'https://blockstream.info/api';
+const BC3MEMPOOL_URL = 'https://bc3mempool.codefalcon.dev/api';
+const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,bitcoin-cash,ethereum,solana&vs_currencies=usd';
+const RPC_SOL = 'https://api.mainnet-beta.solana.com';
+const RPC_ETH = 'https://eth.drpc.org';
+
+// Token contract addresses (for RPC balance queries)
+const USDT_ETH = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+const USDC_ETH = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+const USDT_SOL = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
+const USDC_SOL = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+
+/* ── State ────────────────────────────────────────── */
+let allTxns = [];
+let prices = { bitcoin: null, ethereum: null, solana: null, 'bitcoin-cash': null };
+let priceNoteStr = '';
+let apiStatuses = {};
+let solBalances = { sol: 0, usdt: 0, usdc: 0 };
+let evmBalances = { usdt: 0, usdc: 0, eth: 0 };
+
+/* ── Helpers ──────────────────────────────────────── */
+function explorerUrl(txid, chain) {
+  if (chain === 'bc3') return `https://bc3mempool.codefalcon.dev/tx/${txid}`;
+  if (chain === 'btc') return `https://mempool.space/tx/${txid}`;
+  if (chain === 'sol') return `https://solscan.io/tx/${txid}`;
+  if (chain === 'erc20' || chain === 'eth') return `https://etherscan.io/tx/${txid}`;
+  return `https://mempool.space/tx/${txid}`;
+}
+
+function shortTxid(txid) {
+  if (!txid) return '—';
+  return txid.slice(0, 8) + '…' + txid.slice(-8);
+}
+
+function formatAmount(sats, chain) {
+  if (sats == null) return '—';
+  if (chain === 'bc3') return (sats / 1e8).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 }) + ' BC3';
+  if (chain === 'btc') return (sats / 1e8).toFixed(8) + ' BTC';
+  if (chain === 'sol') return sats + ' SOL';
+  return sats.toLocaleString() + ' sats';
+}
+
+function fmtUsd(v) {
+  if (v == null) return '—';
+  return '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function toDateStr(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts * 1000);
+  return d.toISOString().slice(0, 10);
+}
+
+/* ── Live Fetchers ────────────────────────────────── */
+
+// BTC via blockstream.info
+async function fetchBTC(addr, afterTs) {
+  const start = Date.now();
+  const r = await fetch(`${BLOCKSTREAM_URL}/address/${addr}/txs`);
+  const txs = await r.json();
+  const results = [];
+  for (const tx of txs) {
+    if (!tx.status.confirmed) continue;
+    if (tx.status.block_time < afterTs) continue;
+    for (const vout of tx.vout) {
+      if (vout.scriptpubkey_address === addr) {
+        results.push({
+          txid: tx.txid,
+          chain: 'btc',
+          amount_sats: vout.value,
+          date: toDateStr(tx.status.block_time),
+          block_time: tx.status.block_time
+        });
+      }
+    }
+  }
+  apiStatuses.btc = `✓ BTC ${results.length} txns (${Date.now()-start}ms)`;
+  return results;
+}
+
+// BC3 via bc3mempool
+async function fetchBC3(addr, afterTs) {
+  const start = Date.now();
+  const r = await fetch(`${BC3MEMPOOL_URL}/address/${addr}/txs`);
+  const txs = await r.json();
+  const results = [];
+  for (const tx of txs) {
+    if (!tx.status.confirmed) continue;
+    if (tx.status.block_time < afterTs) continue;
+    for (const vout of tx.vout) {
+      if (vout.scriptpubkey_address === addr) {
+        results.push({
+          txid: tx.txid,
+          chain: 'bc3',
+          amount_sats: vout.value,
+          date: toDateStr(tx.status.block_time),
+          block_time: tx.status.block_time
+        });
+      }
+    }
+  }
+  apiStatuses.bc3 = `✓ BC3 ${results.length} txns (${Date.now()-start}ms)`;
+  return results;
+}
+
+// Solana via public RPC
+async function fetchSolana(addr) {
+  const start = Date.now();
+  const results = [];
+
+  // 1. Get recent signatures — detect incoming SOL transfers
+  try {
+    const r = await fetch(RPC_SOL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getSignaturesForAddress', params: [addr, { limit: 20 }] })
+    });
+    const data = await r.json();
+    if (data.result && data.result.length > 0) {
+      for (const sig of data.result) {
+        try {
+          const r2 = await fetch(RPC_SOL, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getTransaction', params: [sig.signature, { maxSupportedTransactionVersion: 0 }] })
+          });
+          const txData = await r2.json();
+          if (txData.result && txData.result.blockTime) {
+            const meta = txData.result.meta;
+            const accts = txData.result.transaction.message.accountKeys;
+            const acctIdx = accts.indexOf(addr);
+            if (acctIdx >= 0) {
+              const preBal = (meta.preBalances[acctIdx] || 0) / 1e9;
+              const postBal = (meta.postBalances[acctIdx] || 0) / 1e9;
+              const diff = postBal - preBal;
+              if (diff > 0) {
+                results.push({
+                  txid: sig.signature,
+                  chain: 'sol',
+                  amount_sats: diff,
+                  date: toDateStr(txData.result.blockTime),
+                  block_time: txData.result.blockTime,
+                  label: 'SOL Donation'
+                });
+              }
+            }
+          }
+        } catch(e) {}
+      }
+    }
+  } catch(e) {}
+
+  // 2. Current SOL balance
+  try {
+    const r = await fetch(RPC_SOL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getBalance', params: [addr] })
+    });
+    const data = await r.json();
+    solBalances.sol = data.result ? data.result.value / 1e9 : 0;
+  } catch(e) {}
+
+  // 3. SPL USDT/USDC token balances
+  for (const [key, mint] of [['usdt', USDT_SOL], ['usdc', USDC_SOL]]) {
+    try {
+      const r = await fetch(RPC_SOL, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getTokenAccountsByOwner', params: [addr, { mint }, { encoding: 'jsonParsed' }] })
+      });
+      const data = await r.json();
+      if (data.result && data.result.value.length > 0) {
+        solBalances[key] = Number(data.result.value[0].account.data.parsed.info.tokenAmount.uiAmount) || 0;
+      }
+    } catch(e) {}
+  }
+
+  apiStatuses.sol = `✓ SOL ${results.length} txns${solBalances.sol > 0 ? `, ${solBalances.sol.toFixed(4)} SOL` : ''} (${Date.now()-start}ms)`;
+  return results;
+}
+
+// ERC-20 via public RPC eth_call
+async function fetchERC20(addr) {
+  const start = Date.now();
+  const results = [];
+
+  // ERC-20 balanceOf ABI: 0x70a08231 + padded address
+  const balanceOfSig = '0x70a08231' + addr.slice(2).toLowerCase().padStart(64, '0');
+
+  for (const [key, contract] of [['usdt', USDT_ETH], ['usdc', USDC_ETH]]) {
+    try {
+      const r = await fetch(RPC_ETH, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call', params: [{ to: contract, data: balanceOfSig }, 'latest'] })
+      });
+      const data = await r.json();
+      if (data.result) {
+        const balance = Number(BigInt(data.result)) / 1e6;
+        evmBalances[key] = balance;
+      }
+    } catch(e) {}
+  }
+
+  apiStatuses.erc20 = `✓ ERC-20 ${evmBalances.usdt.toFixed(2)} USDT, ${evmBalances.usdc.toFixed(2)} USDC (${Date.now()-start}ms)`;
+  return results;
+}
+
+// Prices via CoinGecko
+async function fetchPrices() {
+  const start = Date.now();
+  const r = await fetch(COINGECKO_URL);
+  const data = await r.json();
+  prices = data;
+  const btcP = data.bitcoin?.usd;
+  const ethP = data.ethereum?.usd;
+  const solP = data.solana?.usd;
+  priceNoteStr = `BTC $${fmtUsd(btcP)} · ETH $${fmtUsd(ethP)} · SOL $${fmtUsd(solP)}`;
+  apiStatuses.prices = `✓ Prices (${Date.now()-start}ms)`;
+}
+
+/* ── Render Functions ─────────────────────────────── */
+
+function renderAll(liveArrays) {
+  allTxns = [].concat(...liveArrays).sort((a, b) => (b.block_time || 0) - (a.block_time || 0));
+  const fdr = CONFIG;
+
+  const bc3Count = allTxns.filter(t => t.chain === 'bc3').length;
+  const btcCount = allTxns.filter(t => t.chain === 'btc').length;
+  const solCount = allTxns.filter(t => t.chain === 'sol').length;
+  const erc20Count = allTxns.filter(t => t.chain === 'erc20').length;
+
+  const btcSats = allTxns.filter(t => t.chain === 'btc').reduce((s, t) => s + (t.amount_sats || 0), 0);
+  const btcAmount = btcSats / 1e8;
+  const btcUsd = btcAmount * (prices.bitcoin?.usd || 0);
+
+  const solAmount = allTxns.filter(t => t.chain === 'sol').reduce((s, t) => s + (t.amount_sats || 0), 0);
+  const solUsd = solAmount * (prices.solana?.usd || 0);
+
+  const erc20Usd = evmBalances.usdt + evmBalances.usdc;
+  const totalUsd = btcUsd + solUsd + erc20Usd;
+  const usdDonationCount = btcCount + solCount + erc20Count;
+  const goal = fdr.goal_usd;
+  const pct = goal > 0 ? Math.min(100, (totalUsd / goal) * 100) : 0;
+
+  // Stats
+  const statsEl = document.getElementById('stats');
+  statsEl.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-number bc3">${bc3Count}</div>
+      <div class="stat-label">BC3 LP Contributions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number bc3">${allTxns.filter(t=>t.chain==='bc3').reduce((s,t)=>s+(t.amount_sats||0)/1e8,0).toLocaleString(undefined,{maximumFractionDigits:2})} BC3</div>
+      <div class="stat-label">Total BC3</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number usd">${usdDonationCount}</div>
+      <div class="stat-label">Donations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number usd">${fmtUsd(totalUsd)}</div>
+      <div class="stat-label">Total Raised · Goal ${fmtUsd(goal)}</div>
+    </div>
+  `;
+
+  // Breakdown
+  const bdEl = document.getElementById('breakdown');
+  const parts = [];
+  if (btcUsd > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#f7931a"></span> BTC: ${fmtUsd(btcUsd)}</span>`);
+  if (solUsd > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#9945ff"></span> SOL: ${fmtUsd(solUsd)}</span>`);
+  if (erc20Usd > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#627eea"></span> ERC-20: ${fmtUsd(erc20Usd)}</span>`);
+  const bc3Total = allTxns.filter(t=>t.chain==='bc3').reduce((s,t)=>s+(t.amount_sats||0)/1e8,0);
+  //if (bc3Total > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#a29bfe"></span> BC3 LP: ${bc3Total.toLocaleString(undefined,{maximumFractionDigits:2})} BC3</span>`);
+  bdEl.innerHTML = parts.join('');
+  bdEl.style.display = parts.length ? 'block' : 'none';
+
+  // Progress
+  if (goal > 0) {
+    const psEl = document.getElementById('progressSection');
+    psEl.style.display = 'block';
+    document.getElementById('progressLabel').textContent = `${fmtUsd(totalUsd)} / ${fmtUsd(goal)}`;
+    document.getElementById('progressPercent').textContent = `${pct.toFixed(1)}%`;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressGoal').textContent = `Goal: ${fmtUsd(goal)}`;
+  }
+
+  // Balance display (ERC-20 & Solana — balance-only tracking)
+  const balEl = document.getElementById('balanceDisplay');
+  const balParts = [];
+  if (solBalances.sol > 0) balParts.push(`<span class="token">SOL: <span class="val">${solBalances.sol.toFixed(4)}</span></span>`);
+  if (solBalances.usdt > 0) balParts.push(`<span class="token">SPL USDT: <span class="val">${solBalances.usdt.toFixed(2)}</span></span>`);
+  if (solBalances.usdc > 0) balParts.push(`<span class="token">SPL USDC: <span class="val">${solBalances.usdc.toFixed(2)}</span></span>`);
+  if (evmBalances.usdt > 0 || evmBalances.usdc > 0) {
+    if (evmBalances.usdt > 0) balParts.push(`<span class="token">ETH USDT: <span class="val">${evmBalances.usdt.toFixed(2)}</span></span>`);
+    if (evmBalances.usdc > 0) balParts.push(`<span class="token">ETH USDC: <span class="val">${evmBalances.usdc.toFixed(2)}</span></span>`);
+    balParts.push(`<span style="font-size:0.7rem;color:#555">(balance only — add free Etherscan API key for tx history)</span>`);
+  }
+  if (balParts.length) {
+    balEl.innerHTML = 'Current balances: ' + balParts.join('');
+    balEl.style.display = 'block';
+  }
+
+  // Price note
+  document.getElementById('priceNote').textContent = priceNoteStr;
+
+  // API status
+  const statuses = Object.values(apiStatuses).map(s => `<span class="ok">${s}</span>`).join(' · ');
+  document.getElementById('apiStatus').innerHTML = statuses;
+
+  // Table
+  renderTable(allTxns);
+}
+
+function renderTable(txns) {
+  const filter = document.querySelector('.filter-btn.active').dataset.filter;
+  const filtered = filter === 'all' ? txns : txns.filter(t => t.chain === filter);
+  const body = document.getElementById('txBody');
+
+  if (filtered.length === 0) {
+    body.innerHTML = '<tr><td colspan="5" class="status-msg">No transactions found for this filter.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = filtered.map(t => {
+    let amountHtml = formatAmount(t.amount_sats, t.chain);
+    let usdVal = null;
+    if (t.chain === 'btc' && t.amount_sats != null && prices.bitcoin?.usd) {
+      usdVal = (t.amount_sats / 1e8) * prices.bitcoin.usd;
+    } else if (t.chain === 'sol' && t.amount_sats != null && prices.solana?.usd) {
+      usdVal = t.amount_sats * prices.solana.usd;
+    } else if (t.chain === 'erc20' && t.amount_sats != null) {
+      usdVal = t.amount_sats; // stablecoins
+    }
+    if (usdVal) amountHtml += ` <span class="usd-hint">≈ ${fmtUsd(usdVal)}</span>`;
+
+    const label = t.label || 'Donation';
+
+    return `
+    <tr>
+      <td class="label-cell">${label}</td>
+      <td><span class="chain-badge ${t.chain}">${t.chain === 'bc3' ? 'LP' : t.chain === 'btc' ? 'BTC' : t.chain === 'sol' ? 'SOL' : t.chain.toUpperCase()}</span></td>
+      <td class="amount-cell">${amountHtml}${t.notes ? ' <span style="color:#666;font-size:0.75rem">· ' + t.notes + '</span>' : ''}</td>
+      <td><span class="txid-cell"><a href="${explorerUrl(t.txid, t.chain)}" target="_blank" title="${t.txid}">${shortTxid(t.txid)} ↗</a></span></td>
+      <td class="date-cell">${t.date || '—'}</td>
+    </tr>
+  `}).join('');
+}
+
+/* ── Init ─────────────────────────────────────────── */
+async function init() {
+  document.getElementById('stats').innerHTML =
+    '<div class="status-msg">Loading transaction data from blockchains…</div>';
+
+  // Populate donate addresses from config
+  const a = CONFIG.addresses;
+  const donateAddresses = {
+    addrBtc: a.btc,
+    addrEvm: a.evm,
+    addrSol: a.sol
+  };
+  Object.entries(donateAddresses).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    el.dataset.copy = value;
+    el.innerHTML = `${value}<span class="hint">click to copy</span>`;
+  });
+
+  const copyToClipboard = async (text) => {
+    if (!text) return false;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const attachCopyHandler = (el) => {
+    el.addEventListener('click', async () => {
+      const text = el.dataset.copy;
+      const copied = await copyToClipboard(text);
+      if (!copied) return;
+      el.classList.add('copied');
+      const hint = el.querySelector('.hint, .copy-tooltip');
+      if (hint) {
+        const oldText = hint.textContent;
+        hint.textContent = 'copied!';
+        setTimeout(() => {
+          hint.textContent = oldText;
+          el.classList.remove('copied');
+        }, 1500);
+      } else {
+        setTimeout(() => el.classList.remove('copied'), 1500);
+      }
+    });
+  };
+
+  document.querySelectorAll('.donate-addr, .copy-btn').forEach(attachCopyHandler);
+
+  const afterTs = CONFIG.start_date
+    ? new Date(CONFIG.start_date).getTime() / 1000
+    : 0;
+  const addr = CONFIG.addresses;
+
+  const [liveBtc, liveBc3, liveSol, liveErc20] = await Promise.allSettled([
+    fetchBTC(addr.btc, afterTs).catch(() => { apiStatuses.btc = '✗ BTC failed'; return []; }),
+    fetchBC3(addr.btc, afterTs).catch(() => { apiStatuses.bc3 = '✗ BC3 failed'; return []; }),
+    fetchSolana(addr.sol).catch(() => { apiStatuses.sol = '✗ SOL failed'; return []; }),
+    fetchERC20(addr.evm).catch(() => { apiStatuses.erc20 = '✗ ERC-20 failed'; return []; })
+  ]);
+
+  await fetchPrices().catch(() => { apiStatuses.prices = '✗ Prices failed'; });
+
+  renderAll([
+    liveBtc.status === 'fulfilled' ? liveBtc.value : [],
+    liveBc3.status === 'fulfilled' ? liveBc3.value : [],
+    liveSol.status === 'fulfilled' ? liveSol.value : [],
+    liveErc20.status === 'fulfilled' ? liveErc20.value : []
+  ]);
+}
+
+// Filter switching
+document.getElementById('filters').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable(allTxns);
+});
+
+init();
+</script>
+</body>
+</html>
