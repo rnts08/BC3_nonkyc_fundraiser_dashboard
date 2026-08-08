@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- UPDATED: 2026-08-07 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -213,9 +214,9 @@
   }
   .chain-badge.bc3 { background: #6c5ce722; color: #a29bfe; }
   .chain-badge.btc { background: #f7931a22; color: #f7931a; }
-  .chain-badge.sol { background: #9945ff22; color: #9945ff; }
-  .chain-badge.erc20 { background: #627eea22; color: #627eea; }
   .chain-badge.eth { background: #627eea22; color: #627eea; }
+  .chain-badge.bc2 { background: #0ac18e22; color: #0ac18e; }
+  .chain-badge.sol { background: #9945ff22; color: #9945ff; }
 
   .txid-cell {
     font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
@@ -328,6 +329,8 @@
   }
   .donate-chain.btc { color: #f7931a; }
   .donate-chain.eth { color: #627eea; }
+  .donate-chain.bc2 { color: #0ac18e; }
+  .donate-chain.bc3 { color: #a29bfe; }
   .donate-chain.sol { color: #9945ff; }
   .donate-token {
     font-weight: 400;
@@ -468,15 +471,23 @@
   <h3 class="donate-heading">How to Donate</h3>
   <div class="donate-grid">
     <div class="donate-card">
-      <div class="donate-chain btc">Bitcoin <span class="donate-token">BTC · BCH · BC3</span></div>
+      <div class="donate-chain btc">Bitcoin <span class="donate-token">BTC · BCH</span></div>
       <div class="donate-addr" id="addrBtc"></div>
     </div>
     <div class="donate-card">
-      <div class="donate-chain eth">Ethereum <span class="donate-token">ETH · USDT · USDC</span></div>
-      <div class="donate-addr" id="addrEvm"></div>
+      <div class="donate-chain bc2">BC2 <span class="donate-token">BCH</span></div>
+      <div class="donate-addr" id="addrBc2"></div>
     </div>
     <div class="donate-card">
-      <div class="donate-chain sol">Solana <span class="donate-token">SOL · USDT · USDC</span></div>
+      <div class="donate-chain bc3">BC3 Network <span class="donate-token">BC3</span></div>
+      <div class="donate-addr" id="addrBc3"></div>
+    </div>
+    <div class="donate-card">
+      <div class="donate-chain eth">Ethereum <span class="donate-token">USDT · USDC</span></div>
+      <div class="donate-addr" id="addrEth"></div>
+    </div>
+    <div class="donate-card">
+      <div class="donate-chain sol">Solana <span class="donate-token">USDT · USDC</span></div>
       <div class="donate-addr" id="addrSol"></div>
     </div>
   </div>
@@ -486,8 +497,7 @@
   <button class="filter-btn active" data-filter="all">All</button>
   <button class="filter-btn" data-filter="bc3">BC3</button>
   <button class="filter-btn" data-filter="btc">Bitcoin</button>
-  <button class="filter-btn" data-filter="sol">Solana</button>
-  <button class="filter-btn" data-filter="erc20">ERC-20</button>
+  <button class="filter-btn" data-filter="bc2">BC2</button>
 </section>
 
 <section class="table-wrap">
@@ -536,20 +546,48 @@
 /* ── Configuration ────────────────────────────────── */
 const CONFIG = {
   goal_usd: 3499,
-  start_date: '2026-05-28',
+  start_date: '2026-06-25',
   addresses: {
-    btc: '1BitcoinYxxzrMt2waqqRSNXdRbixiof9Z',  
-    evm: '0x7180023dfb9AE329E3F5ee28658A4D4A7Bc50E24',
+    btc: ['1CezNiugpMFH7D4vLPnRS7F62G8RYd3Skc', '1BitcoinYxxzrMt2waqqRSNXdRbixiof9Z'],
+    bc2: ['1CezNiugpMFH7D4vLPnRS7F62G8RYd3Skc', '1BitcoinYxxzrMt2waqqRSNXdRbixiof9Z'],
+    bc3: ['1CezNiugpMFH7D4vLPnRS7F62G8RYd3Skc', '1BitcoinYxxzrMt2waqqRSNXdRbixiof9Z'],
+    eth: '0x7180023dfb9AE329E3F5ee28658A4D4A7Bc50E24',
     sol: 'JDvCXtAKZxcQyhdrcnF4PsLtUSosWn7gDJsU6YVSLvW6'
   }
 };
 const BLOCKSTREAM_URL = 'https://blockstream.info/api';
 const BC3MEMPOOL_URL = 'https://bc3mempool.codefalcon.dev/api';
-const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,bitcoin-cash,ethereum,solana&vs_currencies=usd';
-const RPC_SOL = 'https://api.mainnet-beta.solana.com';
-const RPC_ETH = 'https://eth.drpc.org';
+const PRICE_POLL_MS = 30000;
+const PRICE_SOURCES = [
+  {
+    name: 'Binance',
+    url: 'https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","BCHUSDT","ETHUSDT","SOLUSDT"]',
+    parse: (d) => {
+      const m = {};
+      d.forEach(x => { m[x.symbol] = parseFloat(x.price); });
+      return { bitcoin: m['BTCUSDT'], 'bitcoin-cash': m['BCHUSDT'], ethereum: m['ETHUSDT'], solana: m['SOLUSDT'] };
+    }
+  },
+  {
+    name: 'CoinGecko',
+    url: 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,bitcoin-cash,ethereum,solana&vs_currencies=usd',
+    parse: (d) => ({ bitcoin: d.bitcoin?.usd, 'bitcoin-cash': d['bitcoin-cash']?.usd, ethereum: d.ethereum?.usd, solana: d.solana?.usd })
+  },
+  {
+    name: 'Kraken',
+    url: 'https://api.kraken.com/0/public/Ticker?pair=XBTUSD,BCHUSD,ETHUSD,SOLUSD',
+    parse: (d) => ({
+      bitcoin: parseFloat(d.result?.XXBTZUSD?.c?.[0]),
+      'bitcoin-cash': parseFloat(d.result?.BCHUSD?.c?.[0]),
+      ethereum: parseFloat(d.result?.XETHZUSD?.c?.[0]),
+      solana: parseFloat(d.result?.SOLUSD?.c?.[0])
+    })
+  }
+];
 
-// Token contract addresses (for RPC balance queries)
+// Public RPC endpoints + token contracts for ETH/SOL balance scanning
+const RPC_ETH = 'https://eth.drpc.org';
+const RPC_SOL = 'https://api.mainnet-beta.solana.com';
 const USDT_ETH = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
 const USDC_ETH = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 const USDT_SOL = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
@@ -557,18 +595,17 @@ const USDC_SOL = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
 /* ── State ────────────────────────────────────────── */
 let allTxns = [];
-let prices = { bitcoin: null, ethereum: null, solana: null, 'bitcoin-cash': null };
+let prices = { bitcoin: null, 'bitcoin-cash': null, ethereum: null, solana: null };
 let priceNoteStr = '';
 let apiStatuses = {};
+let evmBalances = { eth: 0, usdt: 0, usdc: 0 };
 let solBalances = { sol: 0, usdt: 0, usdc: 0 };
-let evmBalances = { usdt: 0, usdc: 0, eth: 0 };
 
 /* ── Helpers ──────────────────────────────────────── */
 function explorerUrl(txid, chain) {
   if (chain === 'bc3') return `https://bc3mempool.codefalcon.dev/tx/${txid}`;
   if (chain === 'btc') return `https://mempool.space/tx/${txid}`;
-  if (chain === 'sol') return `https://solscan.io/tx/${txid}`;
-  if (chain === 'erc20' || chain === 'eth') return `https://etherscan.io/tx/${txid}`;
+  if (chain === 'bc2') return `https://blockchair.com/bitcoin-cash/transaction/${txid}`;
   return `https://mempool.space/tx/${txid}`;
 }
 
@@ -581,7 +618,7 @@ function formatAmount(sats, chain) {
   if (sats == null) return '—';
   if (chain === 'bc3') return (sats / 1e8).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 }) + ' BC3';
   if (chain === 'btc') return (sats / 1e8).toFixed(8) + ' BTC';
-  if (chain === 'sol') return sats + ' SOL';
+  if (chain === 'bc2') return (sats / 1e8).toFixed(8) + ' BCH';
   return sats.toLocaleString() + ' sats';
 }
 
@@ -598,24 +635,32 @@ function toDateStr(ts) {
 
 /* ── Live Fetchers ────────────────────────────────── */
 
-// BTC via blockstream.info
-async function fetchBTC(addr, afterTs) {
+// BTC via blockstream.info (falls back to mempool.space — same API format)
+async function fetchBTC(addrs, afterTs) {
   const start = Date.now();
-  const r = await fetch(`${BLOCKSTREAM_URL}/address/${addr}/txs`);
-  const txs = await r.json();
+  const list = Array.isArray(addrs) ? addrs : [addrs];
   const results = [];
-  for (const tx of txs) {
-    if (!tx.status.confirmed) continue;
-    if (tx.status.block_time < afterTs) continue;
-    for (const vout of tx.vout) {
-      if (vout.scriptpubkey_address === addr) {
-        results.push({
-          txid: tx.txid,
-          chain: 'btc',
-          amount_sats: vout.value,
-          date: toDateStr(tx.status.block_time),
-          block_time: tx.status.block_time
-        });
+  for (const addr of list) {
+    let txs = [];
+    for (const base of [BLOCKSTREAM_URL, 'https://mempool.space/api']) {
+      try {
+        const r = await fetch(`${base}/address/${addr}/txs`);
+        if (r.ok) { txs = await r.json(); break; }
+      } catch(e) {}
+    }
+    for (const tx of txs) {
+      if (!tx.status.confirmed) continue;
+      if (tx.status.block_time < afterTs) continue;
+      for (const vout of tx.vout) {
+        if (vout.scriptpubkey_address === addr) {
+          results.push({
+            txid: tx.txid,
+            chain: 'btc',
+            amount_sats: vout.value,
+            date: toDateStr(tx.status.block_time),
+            block_time: tx.status.block_time
+          });
+        }
       }
     }
   }
@@ -624,23 +669,26 @@ async function fetchBTC(addr, afterTs) {
 }
 
 // BC3 via bc3mempool
-async function fetchBC3(addr, afterTs) {
+async function fetchBC3(addrs, afterTs) {
   const start = Date.now();
-  const r = await fetch(`${BC3MEMPOOL_URL}/address/${addr}/txs`);
-  const txs = await r.json();
+  const list = Array.isArray(addrs) ? addrs : [addrs];
   const results = [];
-  for (const tx of txs) {
-    if (!tx.status.confirmed) continue;
-    if (tx.status.block_time < afterTs) continue;
-    for (const vout of tx.vout) {
-      if (vout.scriptpubkey_address === addr) {
-        results.push({
-          txid: tx.txid,
-          chain: 'bc3',
-          amount_sats: vout.value,
-          date: toDateStr(tx.status.block_time),
-          block_time: tx.status.block_time
-        });
+  for (const addr of list) {
+    const r = await fetch(`${BC3MEMPOOL_URL}/address/${addr}/txs`);
+    const txs = await r.json();
+    for (const tx of txs) {
+      if (!tx.status.confirmed) continue;
+      if (tx.status.block_time < afterTs) continue;
+      for (const vout of tx.vout) {
+        if (vout.scriptpubkey_address === addr) {
+          results.push({
+            txid: tx.txid,
+            chain: 'bc3',
+            amount_sats: vout.value,
+            date: toDateStr(tx.status.block_time),
+            block_time: tx.status.block_time
+          });
+        }
       }
     }
   }
@@ -648,139 +696,157 @@ async function fetchBC3(addr, afterTs) {
   return results;
 }
 
-// Solana via public RPC
-async function fetchSolana(addr) {
+// BC2 (BCH) via haskoin (free public API, no key; blockchair rate-limits heavily)
+async function fetchBC2(addrs, afterTs) {
   const start = Date.now();
+  const list = Array.isArray(addrs) ? addrs : [addrs];
   const results = [];
-
-  // 1. Get recent signatures — detect incoming SOL transfers
-  try {
-    const r = await fetch(RPC_SOL, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getSignaturesForAddress', params: [addr, { limit: 20 }] })
-    });
-    const data = await r.json();
-    if (data.result && data.result.length > 0) {
-      for (const sig of data.result) {
+  for (const addr of list) {
+    try {
+      const r = await fetch(`https://api.haskoin.com/bch/address/${addr}/unspent`);
+      if (!r.ok) continue;
+      const utxos = await r.json();
+      if (!Array.isArray(utxos)) continue;
+      for (const utxo of utxos) {
+        let utxoTime = 0;
         try {
-          const r2 = await fetch(RPC_SOL, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getTransaction', params: [sig.signature, { maxSupportedTransactionVersion: 0 }] })
-          });
-          const txData = await r2.json();
-          if (txData.result && txData.result.blockTime) {
-            const meta = txData.result.meta;
-            const accts = txData.result.transaction.message.accountKeys;
-            const acctIdx = accts.indexOf(addr);
-            if (acctIdx >= 0) {
-              const preBal = (meta.preBalances[acctIdx] || 0) / 1e9;
-              const postBal = (meta.postBalances[acctIdx] || 0) / 1e9;
-              const diff = postBal - preBal;
-              if (diff > 0) {
-                results.push({
-                  txid: sig.signature,
-                  chain: 'sol',
-                  amount_sats: diff,
-                  date: toDateStr(txData.result.blockTime),
-                  block_time: txData.result.blockTime,
-                  label: 'SOL Donation'
-                });
-              }
-            }
+          const tr = await fetch(`https://api.haskoin.com/bch/transaction/${utxo.txid}`);
+          if (tr.ok) {
+            const td = await tr.json();
+            utxoTime = td.time || 0;
           }
         } catch(e) {}
-      }
-    }
-  } catch(e) {}
-
-  // 2. Current SOL balance
-  try {
-    const r = await fetch(RPC_SOL, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getBalance', params: [addr] })
-    });
-    const data = await r.json();
-    solBalances.sol = data.result ? data.result.value / 1e9 : 0;
-  } catch(e) {}
-
-  // 3. SPL USDT/USDC token balances
-  for (const [key, mint] of [['usdt', USDT_SOL], ['usdc', USDC_SOL]]) {
-    try {
-      const r = await fetch(RPC_SOL, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getTokenAccountsByOwner', params: [addr, { mint }, { encoding: 'jsonParsed' }] })
-      });
-      const data = await r.json();
-      if (data.result && data.result.value.length > 0) {
-        solBalances[key] = Number(data.result.value[0].account.data.parsed.info.tokenAmount.uiAmount) || 0;
+        if (utxoTime >= afterTs) {
+          results.push({
+            txid: utxo.txid,
+            chain: 'bc2',
+            amount_sats: utxo.value,
+            date: toDateStr(utxoTime),
+            block_time: utxoTime
+          });
+        }
       }
     } catch(e) {}
   }
-
-  apiStatuses.sol = `✓ SOL ${results.length} txns${solBalances.sol > 0 ? `, ${solBalances.sol.toFixed(4)} SOL` : ''} (${Date.now()-start}ms)`;
+  apiStatuses.bc2 = `✓ BC2 ${results.length} UTXOs${results.length > 0 ? ', ' + (results.reduce((s,t) => s + t.amount_sats, 0) / 1e8).toFixed(4) + ' BCH' : ''} (${Date.now()-start}ms)`;
   return results;
 }
 
-// ERC-20 via public RPC eth_call
-async function fetchERC20(addr) {
+// ETH + ERC-20 USDT/USDC via public RPC
+async function fetchETH(addr) {
   const start = Date.now();
-  const results = [];
-
-  // ERC-20 balanceOf ABI: 0x70a08231 + padded address
   const balanceOfSig = '0x70a08231' + addr.slice(2).toLowerCase().padStart(64, '0');
-
-  for (const [key, contract] of [['usdt', USDT_ETH], ['usdc', USDC_ETH]]) {
-    try {
-      const r = await fetch(RPC_ETH, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call', params: [{ to: contract, data: balanceOfSig }, 'latest'] })
-      });
-      const data = await r.json();
-      if (data.result) {
-        const balance = Number(BigInt(data.result)) / 1e6;
-        evmBalances[key] = balance;
-      }
-    } catch(e) {}
+  const rpc = (method, params) => fetch(RPC_ETH, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params })
+  });
+  try {
+    const [eth, usdt, usdc] = await Promise.all([
+      rpc('eth_getBalance', [addr, 'latest']),
+      rpc('eth_call', [{ to: USDT_ETH, data: balanceOfSig }, 'latest']),
+      rpc('eth_call', [{ to: USDC_ETH, data: balanceOfSig }, 'latest'])
+    ]);
+    const ethJson = await eth.json();
+    const usdtJson = await usdt.json();
+    const usdcJson = await usdc.json();
+    evmBalances.eth = ethJson.result ? Number(BigInt(ethJson.result)) / 1e18 : 0;
+    evmBalances.usdt = usdtJson.result ? Number(BigInt(usdtJson.result)) / 1e6 : 0;
+    evmBalances.usdc = usdcJson.result ? Number(BigInt(usdcJson.result)) / 1e6 : 0;
+    apiStatuses.eth = `✓ ETH ${evmBalances.eth.toFixed(4)} · USDT ${evmBalances.usdt.toFixed(2)} · USDC ${evmBalances.usdc.toFixed(2)} (${Date.now()-start}ms)`;
+  } catch(e) {
+    apiStatuses.eth = '✗ ETH failed';
   }
-
-  apiStatuses.erc20 = `✓ ERC-20 ${evmBalances.usdt.toFixed(2)} USDT, ${evmBalances.usdc.toFixed(2)} USDC (${Date.now()-start}ms)`;
-  return results;
+  return [];
 }
 
-// Prices via CoinGecko
+// SOL + SPL USDT/USDC via public RPC
+async function fetchSOL(addr) {
+  const start = Date.now();
+  const rpc = (method, params) => fetch(RPC_SOL, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params })
+  });
+  try {
+    const [bal, usdt, usdc] = await Promise.all([
+      rpc('getBalance', [addr]),
+      rpc('getTokenAccountsByOwner', [addr, { mint: USDT_SOL }, { encoding: 'jsonParsed' }]),
+      rpc('getTokenAccountsByOwner', [addr, { mint: USDC_SOL }, { encoding: 'jsonParsed' }])
+    ]);
+    const balJson = await bal.json();
+    const usdtJson = await usdt.json();
+    const usdcJson = await usdc.json();
+    solBalances.sol = balJson.result ? balJson.result.value / 1e9 : 0;
+    const sumTokens = (j) => (j.result?.value || []).reduce((s, a) => s + (Number(a.account?.data?.parsed?.info?.tokenAmount?.uiAmount) || 0), 0);
+    solBalances.usdt = sumTokens(usdtJson);
+    solBalances.usdc = sumTokens(usdcJson);
+    apiStatuses.sol = `✓ SOL ${solBalances.sol.toFixed(4)} · USDT ${solBalances.usdt.toFixed(2)} · USDC ${solBalances.usdc.toFixed(2)} (${Date.now()-start}ms)`;
+  } catch(e) {
+    apiStatuses.sol = '✗ SOL failed';
+  }
+  return [];
+}
+
+// Prices via public exchange APIs (Binance → CoinGecko → Kraken), refreshed on interval
 async function fetchPrices() {
   const start = Date.now();
-  const r = await fetch(COINGECKO_URL);
-  const data = await r.json();
-  prices = data;
-  const btcP = data.bitcoin?.usd;
-  const ethP = data.ethereum?.usd;
-  const solP = data.solana?.usd;
-  priceNoteStr = `BTC $${fmtUsd(btcP)} · ETH $${fmtUsd(ethP)} · SOL $${fmtUsd(solP)}`;
-  apiStatuses.prices = `✓ Prices (${Date.now()-start}ms)`;
+  for (const src of PRICE_SOURCES) {
+    try {
+      const r = await fetch(src.url);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      const p = src.parse(data);
+      if (p.bitcoin == null || p['bitcoin-cash'] == null) throw new Error('no data');
+      prices = { bitcoin: { usd: p.bitcoin }, 'bitcoin-cash': { usd: p['bitcoin-cash'] }, ethereum: { usd: p.ethereum }, solana: { usd: p.solana } };
+      const btcP = p.bitcoin;
+      const bchP = p['bitcoin-cash'];
+      const ethP = p.ethereum;
+      const solP = p.solana;
+      priceNoteStr = `Real-time prices (${src.name}): BTC $${fmtUsd(btcP)} · BCH $${fmtUsd(bchP)} · ETH $${fmtUsd(ethP)} · SOL $${fmtUsd(solP)}`;
+      apiStatuses.prices = `✓ Prices ${src.name} (${Date.now()-start}ms)`;
+      return;
+    } catch (e) {
+      // try next source
+    }
+  }
+  apiStatuses.prices = '✗ Prices failed (all sources)';
 }
 
 /* ── Render Functions ─────────────────────────────── */
 
 function renderAll(liveArrays) {
   allTxns = [].concat(...liveArrays).sort((a, b) => (b.block_time || 0) - (a.block_time || 0));
+  renderView();
+}
+
+function renderView() {
   const fdr = CONFIG;
 
-  const bc3Count = allTxns.filter(t => t.chain === 'bc3').length;
   const btcCount = allTxns.filter(t => t.chain === 'btc').length;
-  const solCount = allTxns.filter(t => t.chain === 'sol').length;
-  const erc20Count = allTxns.filter(t => t.chain === 'erc20').length;
+  const bc2Count = allTxns.filter(t => t.chain === 'bc2').length;
+  const bc3Count = allTxns.filter(t => t.chain === 'bc3').length;
+
+  const bc3LpTxns = allTxns.filter(t => t.chain === 'bc3' || t.chain === 'bc2');
+  const bc3LpCount = bc3LpTxns.length;
+  const bc3LpSats = bc3LpTxns.reduce((s, t) => s + (t.amount_sats || 0), 0);
+  const bc3LpAmount = bc3LpSats / 1e8;
 
   const btcSats = allTxns.filter(t => t.chain === 'btc').reduce((s, t) => s + (t.amount_sats || 0), 0);
   const btcAmount = btcSats / 1e8;
   const btcUsd = btcAmount * (prices.bitcoin?.usd || 0);
 
-  const solAmount = allTxns.filter(t => t.chain === 'sol').reduce((s, t) => s + (t.amount_sats || 0), 0);
-  const solUsd = solAmount * (prices.solana?.usd || 0);
+  const bc2Sats = allTxns.filter(t => t.chain === 'bc2').reduce((s, t) => s + (t.amount_sats || 0), 0);
+  const bc2Amount = bc2Sats / 1e8;
+  const bc2Usd = bc2Amount * (prices['bitcoin-cash']?.usd || 0);
 
-  const erc20Usd = evmBalances.usdt + evmBalances.usdc;
-  const totalUsd = btcUsd + solUsd + erc20Usd;
-  const usdDonationCount = btcCount + solCount + erc20Count;
+  // ETH/SOL on-chain balances (scanned live)
+  const ethUsd = evmBalances.eth * (prices.ethereum?.usd || 0) + evmBalances.usdt + evmBalances.usdc;
+  const solUsd = solBalances.sol * (prices.solana?.usd || 0) + solBalances.usdt + solBalances.usdc;
+  const ethSolUsd = ethUsd + solUsd;
+
+  // Donations (toward the goal) = Bitcoin network + ETH/SOL balances.
+  // BCH (bc2) and BC3 sent to the BTC-like address are LP contributions.
+  const totalUsd = btcUsd + ethSolUsd;
+  const usdDonationCount = btcCount + (ethSolUsd > 0 ? 1 : 0);
   const goal = fdr.goal_usd;
   const pct = goal > 0 ? Math.min(100, (totalUsd / goal) * 100) : 0;
 
@@ -788,12 +854,12 @@ function renderAll(liveArrays) {
   const statsEl = document.getElementById('stats');
   statsEl.innerHTML = `
     <div class="stat-card">
-      <div class="stat-number bc3">${bc3Count}</div>
+      <div class="stat-number bc3">${bc3LpCount}</div>
       <div class="stat-label">BC3 LP Contributions</div>
     </div>
     <div class="stat-card">
-      <div class="stat-number bc3">${allTxns.filter(t=>t.chain==='bc3').reduce((s,t)=>s+(t.amount_sats||0)/1e8,0).toLocaleString(undefined,{maximumFractionDigits:2})} BC3</div>
-      <div class="stat-label">Total BC3</div>
+      <div class="stat-number bc3">${bc3LpAmount.toLocaleString(undefined,{maximumFractionDigits:2})} LP</div>
+      <div class="stat-label">Total LP</div>
     </div>
     <div class="stat-card">
       <div class="stat-number usd">${usdDonationCount}</div>
@@ -809,10 +875,10 @@ function renderAll(liveArrays) {
   const bdEl = document.getElementById('breakdown');
   const parts = [];
   if (btcUsd > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#f7931a"></span> BTC: ${fmtUsd(btcUsd)}</span>`);
+  if (ethUsd > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#627eea"></span> ETH: ${fmtUsd(ethUsd)}</span>`);
   if (solUsd > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#9945ff"></span> SOL: ${fmtUsd(solUsd)}</span>`);
-  if (erc20Usd > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#627eea"></span> ERC-20: ${fmtUsd(erc20Usd)}</span>`);
-  const bc3Total = allTxns.filter(t=>t.chain==='bc3').reduce((s,t)=>s+(t.amount_sats||0)/1e8,0);
-  //if (bc3Total > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#a29bfe"></span> BC3 LP: ${bc3Total.toLocaleString(undefined,{maximumFractionDigits:2})} BC3</span>`);
+  if (bc2Usd > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#0ac18e"></span> BCH LP: ${fmtUsd(bc2Usd)}</span>`);
+  if (bc3LpSats > 0) parts.push(`<span class="breakdown-item"><span class="breakdown-dot" style="background:#a29bfe"></span> BC3 LP: ${bc3LpAmount.toLocaleString(undefined,{maximumFractionDigits:4})} BC3/BCH</span>`);
   bdEl.innerHTML = parts.join('');
   bdEl.style.display = parts.length ? 'block' : 'none';
 
@@ -826,17 +892,16 @@ function renderAll(liveArrays) {
     document.getElementById('progressGoal').textContent = `Goal: ${fmtUsd(goal)}`;
   }
 
-  // Balance display (ERC-20 & Solana — balance-only tracking)
+  // Balance display
   const balEl = document.getElementById('balanceDisplay');
   const balParts = [];
+  if (evmBalances.eth > 0) balParts.push(`<span class="token">ETH: <span class="val">${evmBalances.eth.toFixed(4)}</span></span>`);
+  if (evmBalances.usdt > 0) balParts.push(`<span class="token">ETH USDT: <span class="val">${evmBalances.usdt.toFixed(2)}</span></span>`);
+  if (evmBalances.usdc > 0) balParts.push(`<span class="token">ETH USDC: <span class="val">${evmBalances.usdc.toFixed(2)}</span></span>`);
   if (solBalances.sol > 0) balParts.push(`<span class="token">SOL: <span class="val">${solBalances.sol.toFixed(4)}</span></span>`);
   if (solBalances.usdt > 0) balParts.push(`<span class="token">SPL USDT: <span class="val">${solBalances.usdt.toFixed(2)}</span></span>`);
   if (solBalances.usdc > 0) balParts.push(`<span class="token">SPL USDC: <span class="val">${solBalances.usdc.toFixed(2)}</span></span>`);
-  if (evmBalances.usdt > 0 || evmBalances.usdc > 0) {
-    if (evmBalances.usdt > 0) balParts.push(`<span class="token">ETH USDT: <span class="val">${evmBalances.usdt.toFixed(2)}</span></span>`);
-    if (evmBalances.usdc > 0) balParts.push(`<span class="token">ETH USDC: <span class="val">${evmBalances.usdc.toFixed(2)}</span></span>`);
-    balParts.push(`<span style="font-size:0.7rem;color:#555">(balance only — add free Etherscan API key for tx history)</span>`);
-  }
+  if (bc3LpSats > 0) balParts.push(`<span class="token">LP: <span class="val">${bc3LpAmount.toFixed(8)}</span> BC3/BCH</span>`);
   if (balParts.length) {
     balEl.innerHTML = 'Current balances: ' + balParts.join('');
     balEl.style.display = 'block';
@@ -868,10 +933,8 @@ function renderTable(txns) {
     let usdVal = null;
     if (t.chain === 'btc' && t.amount_sats != null && prices.bitcoin?.usd) {
       usdVal = (t.amount_sats / 1e8) * prices.bitcoin.usd;
-    } else if (t.chain === 'sol' && t.amount_sats != null && prices.solana?.usd) {
-      usdVal = t.amount_sats * prices.solana.usd;
-    } else if (t.chain === 'erc20' && t.amount_sats != null) {
-      usdVal = t.amount_sats; // stablecoins
+    } else if (t.chain === 'bc2' && t.amount_sats != null && prices['bitcoin-cash']?.usd) {
+      usdVal = (t.amount_sats / 1e8) * prices['bitcoin-cash'].usd;
     }
     if (usdVal) amountHtml += ` <span class="usd-hint">≈ ${fmtUsd(usdVal)}</span>`;
 
@@ -880,7 +943,7 @@ function renderTable(txns) {
     return `
     <tr>
       <td class="label-cell">${label}</td>
-      <td><span class="chain-badge ${t.chain}">${t.chain === 'bc3' ? 'LP' : t.chain === 'btc' ? 'BTC' : t.chain === 'sol' ? 'SOL' : t.chain.toUpperCase()}</span></td>
+      <td><span class="chain-badge ${t.chain}">${t.chain === 'bc3' ? 'LP' : t.chain === 'btc' ? 'BTC' : t.chain.toUpperCase()}</span></td>
       <td class="amount-cell">${amountHtml}${t.notes ? ' <span style="color:#666;font-size:0.75rem">· ' + t.notes + '</span>' : ''}</td>
       <td><span class="txid-cell"><a href="${explorerUrl(t.txid, t.chain)}" target="_blank" title="${t.txid}">${shortTxid(t.txid)} ↗</a></span></td>
       <td class="date-cell">${t.date || '—'}</td>
@@ -896,8 +959,10 @@ async function init() {
   // Populate donate addresses from config
   const a = CONFIG.addresses;
   const donateAddresses = {
-    addrBtc: a.btc,
-    addrEvm: a.evm,
+    addrBtc: Array.isArray(a.btc) ? a.btc[0] : a.btc,
+    addrBc2: Array.isArray(a.bc2) ? a.bc2[0] : a.bc2,
+    addrBc3: Array.isArray(a.bc3) ? a.bc3[0] : a.bc3,
+    addrEth: a.eth,
     addrSol: a.sol
   };
   Object.entries(donateAddresses).forEach(([id, value]) => {
@@ -955,11 +1020,12 @@ async function init() {
     : 0;
   const addr = CONFIG.addresses;
 
-  const [liveBtc, liveBc3, liveSol, liveErc20] = await Promise.allSettled([
+  const [liveBtc, liveBc3, liveBc2, liveEth, liveSol] = await Promise.allSettled([
     fetchBTC(addr.btc, afterTs).catch(() => { apiStatuses.btc = '✗ BTC failed'; return []; }),
-    fetchBC3(addr.btc, afterTs).catch(() => { apiStatuses.bc3 = '✗ BC3 failed'; return []; }),
-    fetchSolana(addr.sol).catch(() => { apiStatuses.sol = '✗ SOL failed'; return []; }),
-    fetchERC20(addr.evm).catch(() => { apiStatuses.erc20 = '✗ ERC-20 failed'; return []; })
+    fetchBC3(addr.bc3, afterTs).catch(() => { apiStatuses.bc3 = '✗ BC3 failed'; return []; }),
+    fetchBC2(addr.bc2, afterTs).catch(() => { apiStatuses.bc2 = '✗ BC2 failed'; return []; }),
+    fetchETH(addr.eth).catch(() => { apiStatuses.eth = '✗ ETH failed'; return []; }),
+    fetchSOL(addr.sol).catch(() => { apiStatuses.sol = '✗ SOL failed'; return []; })
   ]);
 
   await fetchPrices().catch(() => { apiStatuses.prices = '✗ Prices failed'; });
@@ -967,9 +1033,16 @@ async function init() {
   renderAll([
     liveBtc.status === 'fulfilled' ? liveBtc.value : [],
     liveBc3.status === 'fulfilled' ? liveBc3.value : [],
-    liveSol.status === 'fulfilled' ? liveSol.value : [],
-    liveErc20.status === 'fulfilled' ? liveErc20.value : []
+    liveBc2.status === 'fulfilled' ? liveBc2.value : [],
+    liveEth.status === 'fulfilled' ? liveEth.value : [],
+    liveSol.status === 'fulfilled' ? liveSol.value : []
   ]);
+
+  // Real-time price refresh
+  setInterval(async () => {
+    await Promise.allSettled([fetchPrices(), fetchETH(addr.eth), fetchSOL(addr.sol)]);
+    renderView();
+  }, PRICE_POLL_MS);
 }
 
 // Filter switching
